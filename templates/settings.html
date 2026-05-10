@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<section class="container narrow">
+  <h1>Settings</h1>
+
+  <article class="card">
+    <h2>Account</h2>
+    {% match current_user %}
+    {% when Some with (u) %}
+      <dl class="kv">
+        <dt>Display name</dt><dd>{{ u.display_name }}</dd>
+        <dt>Email</dt><dd>{{ u.email }}</dd>
+      </dl>
+    {% when None %}{% endmatch %}
+  </article>
+
+  <article class="card">
+    <h2>Change password</h2>
+    <form id="change-password-form">
+      <label>
+        <span>Current password</span>
+        <input name="current" type="password" autocomplete="current-password" required />
+      </label>
+      <label>
+        <span>New password</span>
+        <input name="new" type="password" autocomplete="new-password" required minlength="8" />
+      </label>
+      <p class="error" id="cp-error" hidden></p>
+      <p class="success" id="cp-ok" hidden>Password updated.</p>
+      <button class="btn-primary" type="submit">Update</button>
+    </form>
+  </article>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/settings.js"></script>
+{% endblock %}

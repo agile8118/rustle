@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Your boards{% endblock %}
+{% block content %}
+<section class="container">
+  <header class="page-head">
+    <h1>Your boards</h1>
+    <button class="btn-primary" id="new-board-btn" type="button">+ New board</button>
+  </header>
+
+  {% if boards.is_empty() %}
+    <div class="empty">
+      <p>No boards yet. Create your first to get going.</p>
+    </div>
+  {% else %}
+  <ul class="board-grid">
+    {% for b in boards %}
+    <li class="board-card">
+      <a href="/board/{{ b.id }}">
+        <h3>{{ b.title }}</h3>
+        <span class="muted small">Created {{ b.created_at.format("%b %-d, %Y") }}</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+
+<dialog id="new-board-dialog" class="modal">
+  <form id="new-board-form" method="dialog">
+    <h2>New board</h2>
+    <label>
+      <span>Title</span>
+      <input name="title" type="text" required maxlength="120" autofocus />
+    </label>
+    <p class="error" id="new-board-error" hidden></p>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="new-board-cancel">Cancel</button>
+      <button type="submit" class="btn-primary">Create</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/dashboard.js"></script>
+{% endblock %}

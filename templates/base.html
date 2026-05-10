@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Rustle{% endblock %} — Rustle</title>
+  <link rel="stylesheet" href="/static/css/app.css" />
+  <link rel="icon" type="image/svg+xml" href="/static/img/logo.svg" />
+</head>
+<body>
+  <header class="topnav">
+    <a href="/" class="brand">
+      <img src="/static/img/logo.svg" alt="" width="28" height="28" />
+      <span>Rustle</span>
+    </a>
+    <nav>
+      {% match current_user %}
+      {% when Some with (u) %}
+        <a href="/dashboard">Dashboard</a>
+        <a href="/settings">Settings</a>
+        <span class="user-chip">{{ u.display_name }}</span>
+        <button class="btn-ghost" id="logout-btn" type="button">Sign out</button>
+      {% when None %}
+        <a href="/login">Sign in</a>
+        <a href="/register" class="btn-primary">Get started</a>
+      {% endmatch %}
+    </nav>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  <footer>
+    <span>Rustle · built with Rust, Axum, sqlx</span>
+  </footer>
+  <script src="/static/js/auth.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

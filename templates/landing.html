@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Plan work that actually moves{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-inner">
+    <h1>Plan work that <span class="accent">actually moves.</span></h1>
+    <p class="lede">A fast, focused Kanban board for small teams and solo makers. No bloat, no popups — just columns, cards, and progress.</p>
+    <div class="cta-row">
+      {% match current_user %}
+      {% when Some with (_u) %}
+        <a class="btn-primary lg" href="/dashboard">Go to your boards →</a>
+      {% when None %}
+        <a class="btn-primary lg" href="/register">Create your first board</a>
+        <a class="btn-ghost lg" href="/login">I already have an account</a>
+      {% endmatch %}
+    </div>
+  </div>
+</section>
+
+<section class="features">
+  <article class="feature">
+    <h3>Drag-and-drop columns</h3>
+    <p>Move cards between To Do, Doing, and Done with native HTML5 drag-and-drop. Your changes save instantly.</p>
+  </article>
+  <article class="feature">
+    <h3>Built on Rust</h3>
+    <p>Backed by Axum, Tokio, and sqlx. Compile-time-checked queries on Postgres, microsecond response times.</p>
+  </article>
+  <article class="feature">
+    <h3>Yours alone</h3>
+    <p>Boards are private by default. Session-based auth with Argon2id password hashing keeps your data yours.</p>
+  </article>
+</section>
+{% endblock %}

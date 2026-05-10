@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ board_title }}{% endblock %}
+{% block content %}
+<section class="board-page" data-board-id="{{ board_id }}">
+  <header class="page-head">
+    <h1 id="board-title">{{ board_title }}</h1>
+    <div class="row-gap">
+      <button class="btn-ghost" id="rename-board-btn" type="button">Rename</button>
+      <button class="btn-ghost danger" id="delete-board-btn" type="button">Delete</button>
+    </div>
+  </header>
+
+  <div class="kanban" id="kanban">
+    <p class="muted">Loading…</p>
+  </div>
+
+  <button class="btn-primary" id="add-column-btn" type="button">+ Add column</button>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/board.js"></script>
+{% endblock %}

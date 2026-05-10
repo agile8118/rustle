@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Create account{% endblock %}
+{% block content %}
+<section class="auth-card">
+  <h1>Create your account</h1>
+  <p class="muted">Free, private, and instant.</p>
+  <form id="register-form" novalidate>
+    <label>
+      <span>Display name</span>
+      <input name="display_name" type="text" autocomplete="name" required minlength="1" maxlength="80" />
+    </label>
+    <label>
+      <span>Email</span>
+      <input name="email" type="email" autocomplete="email" required />
+    </label>
+    <label>
+      <span>Password</span>
+      <input name="password" type="password" autocomplete="new-password" required minlength="8" />
+      <small class="muted">At least 8 characters.</small>
+    </label>
+    <p class="error" id="register-error" hidden></p>
+    <button type="submit" class="btn-primary block">Create account</button>
+  </form>
+  <p class="muted center">Already have one? <a href="/login">Sign in</a></p>
+</section>
+{% endblock %}

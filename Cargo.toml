@@ -1,0 +1,50 @@
+[package]
+name = "rustle"
+version = "0.1.0"
+edition = "2021"
+default-run = "rustle"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "rustle"
+path = "src/main.rs"
+
+[dependencies]
+axum = { version = "0.7", features = ["macros"] }
+tokio = { version = "1", features = ["full"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["fs", "trace", "compression-gzip"] }
+tower-cookies = "0.10"
+
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio-rustls", "postgres", "macros", "uuid", "chrono", "migrate"] }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+askama = "0.12"
+askama_axum = "0.4"
+
+argon2 = "0.5"
+password-hash = { version = "0.5", features = ["std"] }
+rand = "0.8"
+rand_core = { version = "0.6", features = ["std"] }
+hex = "0.4"
+
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+validator = { version = "0.18", features = ["derive"] }
+
+thiserror = "1"
+anyhow = "1"
+
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+dotenvy = "0.15"
+
+[dev-dependencies]
+reqwest = { version = "0.12", default-features = false, features = ["json", "cookies", "rustls-tls"] }
+serde_json = "1"
