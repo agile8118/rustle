@@ -2,3 +2,6 @@
 /.env.local
 *.log
 .DS_Store
+.env
+.env.test
+Backend.MD

@@ -15,6 +15,7 @@ pub struct CreateCardReq {
     #[validate(length(min = 1, max = 200))]
     pub title: String,
     pub description: Option<String>,
+    pub due_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Deserialize, Validate)]
@@ -47,12 +48,13 @@ pub async fn create(
     .await?;
     let card = sqlx::query_as!(
         Card,
-        "INSERT INTO cards (column_id, title, description, position) VALUES ($1, $2, $3, $4)
+        "INSERT INTO cards (column_id, title, description, position, due_at) VALUES ($1, $2, $3, $4, $5)
          RETURNING id, column_id, title, description, position, due_at, created_at",
         column_id,
         req.title,
         req.description.unwrap_or_default(),
-        next_pos.unwrap_or(0)
+        next_pos.unwrap_or(0),
+        req.due_at
     )
     .fetch_one(&state.pool)
     .await?;

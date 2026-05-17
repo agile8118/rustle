@@ -1,12 +1,26 @@
 use crate::auth::middleware::require_user;
 use crate::handlers::*;
 use crate::state::AppState;
+use axum::extract::Request;
+use axum::middleware::Next;
+use axum::response::Response;
 use axum::routing::{delete, get, patch, post};
 use axum::{middleware, Router};
+use std::time::Instant;
 use tower_cookies::CookieManagerLayer;
 use tower_http::compression::CompressionLayer;
 use tower_http::services::ServeDir;
-use tower_http::trace::TraceLayer;
+
+async fn access_log(req: Request, next: Next) -> Response {
+    let method = req.method().clone();
+    let uri = req.uri().clone();
+    let start = Instant::now();
+    let res = next.run(req).await;
+    let ms = start.elapsed().as_millis();
+    let ts = chrono::Local::now().format("%Y-%m-%d %H:%M:%S");
+    println!("{ts}  -- {method} {uri} {} -- response-time: {ms} ms", res.status());
+    res
+}
 
 pub fn build_router(state: AppState) -> Router {
     let public_pages = Router::new()
@@ -72,6 +86,6 @@ pub fn build_router(state: AppState) -> Router {
         .nest_service("/static", ServeDir::new("public"))
         .layer(CookieManagerLayer::new())
         .layer(CompressionLayer::new())
-        .layer(TraceLayer::new_for_http())
+        .layer(middleware::from_fn(access_log))
         .with_state(state)
 }
