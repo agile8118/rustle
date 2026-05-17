@@ -194,9 +194,3 @@ rust-app/
 - **`migrations/0001_init.sql`** — the canonical schema. If you add a column, write `migrations/0003_*.sql` rather than editing this file.
 - **`templates/base.html`** — every page extends this, so global layout changes happen in one place.
 - **`public/css/app.css`** — top of the file declares CSS custom properties (`--accent`, `--bg`, etc.); change those to retheme.
-
----
-
-## License
-
-MIT.

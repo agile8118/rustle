@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE cards SET position = position + 1\n         WHERE column_id = $1 AND position >= $2 AND id <> $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ec4f653f3eb2c7bcca365392c5a55e26edc0663e52b0255ba67deede5260e4df"
+}
