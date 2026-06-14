@@ -20,7 +20,7 @@ A small, modern Kanban app — boards, columns, cards, comments, labels — buil
 | **Logging** | `tracing` + `tracing-subscriber` |
 | **Tests** | `#[sqlx::test]` (per-test fresh database, automatic migrations) + `reqwest` client driving the real router |
 
-You only need `cargo` and a running Postgres on your machine. There is no bundler, no Node, no Docker.
+You only need `cargo` and a running Postgres on your machine.
 
 ---
 
@@ -29,12 +29,12 @@ You only need `cargo` and a running Postgres on your machine. There is no bundle
 ### Prerequisites
 
 - Rust (any recent stable, e.g. `1.80+`)
-- PostgreSQL 14+ running locally with a user named `joseph` (no password)
+- PostgreSQL 14+ running locally
 
 The connection details live in `.env`:
 
 ```env
-DATABASE_URL=postgres://joseph@localhost:5432/rustle
+DATABASE_URL=postgres://postgres:password1234@localhost:5432/rustle
 APP_HOST=127.0.0.1
 APP_PORT=7070
 COOKIE_SECURE=false
@@ -44,33 +44,33 @@ COOKIE_SECURE=false
 
 ```bash
 # 1. Create + seed the database (only needs to be done once, or whenever you want fresh demo data)
-cargo run --bin seed
+./do.sh seed
 
-# 2. Start the server with auto-restart on file change
-cargo run
+# 2. Start the server
+./do.sh run
 
 # Or, if you have `cargo-watch` installed, get hot-reload:
 cargo install cargo-watch    # one-time
-cargo watch -x run
+./env.sh cargo watch -x run
 ```
 
-The server prints its address on startup. Open <http://127.0.0.1:7070> — you'll see the landing page. Sign in with the demo credentials the seeder prints (`ada@rustle.dev` / `password123`).
+`./do.sh run` and `./do.sh seed` load env vars from `.env` via `env.sh`. The server prints its address on startup. Open <http://127.0.0.1:7070> — you'll see the landing page. Sign in with the demo credentials the seeder prints (`ada@rustle.dev` / `password123`).
 
 ### Production
 
-Build a release binary and run it directly. No external runtime needed.
+The app is deployed as two precompiled binaries (`server`, `seed`) — see `deploy.sh`, which cross-compiles for `aarch64-unknown-linux-musl` and ships them to the server along with `public/`, `env.sh`, and `ecosystem.config.js`.
 
-```bash
-# Optimised build (slow first time, fast after)
-cargo build --release
+There is no `.env` on the server — `env.sh` falls back to AWS SSM (`/rustle/prod/*`) for config, so the server needs AWS credentials with access to that path. `ecosystem.config.js` runs the server via `pm2 startOrReload` as `./env.sh ./server`.
 
-# Run with production-friendly env. Replace creds for your real DB.
-DATABASE_URL=postgres://user:pass@db.host:5432/rustle \
-APP_HOST=0.0.0.0 \
-APP_PORT=7070 \
-COOKIE_SECURE=true \
-RUST_LOG=rustle=info,tower_http=warn \
-./target/release/rustle
+The deployed layout (`~/rustle` on the prod host) is intentionally minimal — `migrations/` and `templates/` are embedded into the binaries at compile time, so they don't need to ship:
+
+```
+~/rustle/
+├── ecosystem.config.js    # pm2 config — runs `./env.sh ./server`
+├── env.sh                 # loads config from AWS SSM (/rustle/prod/*)
+├── server                 # release binary (aarch64-unknown-linux-musl)
+├── seed                   # release binary — `./do.sh seed` for demo data
+└── public/                # static assets served at /static
 ```
 
 Notes:
@@ -83,8 +83,8 @@ Notes:
 ## How to run the tests
 
 ```bash
-# Uses the test database listed in .env.test (postgres://joseph@localhost:5432/rustle_test)
-cargo test
+# Uses the test database listed in .env.test (postgres://postgres@localhost:5432/rustle_test)
+./do.sh test
 ```
 
 What runs:
@@ -103,12 +103,12 @@ Each integration test spins up the real Axum router on a random port against a *
 ## Seeding the database
 
 ```bash
-cargo run --bin seed
+./do.sh seed
 ```
 
 What it does, in order:
 
-1. Reads `DATABASE_URL` from `.env` (or the env).
+1. Reads `DATABASE_URL` from the environment (loaded from `.env` via `env.sh` locally, or AWS SSM in production).
 2. **If the database doesn't exist, it creates it** — no need to `createdb` by hand.
 3. Runs all SQL migrations from `migrations/`.
 4. Wipes any existing rows (`TRUNCATE users CASCADE`).
@@ -127,7 +127,11 @@ Re-run the seed any time you want a clean demo state.
 rust-app/
 ├── Cargo.toml              # crate manifest + dependencies
 ├── .env                    # dev DB URL, server host/port, log level
-├── .env.test               # DB URL used by `cargo test`
+├── .env.test               # DB URL used by `./do.sh test`
+├── env.sh                  # loads .env locally or AWS SSM (/rustle/prod/*) in production
+├── do.sh                   # ./do.sh [build | run | seed | test]
+├── deploy.sh               # cross-compiles + ships server/seed to the prod host
+├── ecosystem.config.js     # pm2 config — runs `./env.sh ./server`
 ├── README.md               # this file
 │
 ├── migrations/             # SQL migrations (applied at startup + by seed/tests)
@@ -152,7 +156,7 @@ rust-app/
 │   └── settings.html       # /settings — account + change password
 │
 ├── src/
-│   ├── main.rs             # entry point: env, tracing, pool, migrations, listener
+│   ├── main.rs             # entry point (bin: server): tracing, pool, migrations, listener
 │   ├── lib.rs              # re-exports modules; `pub fn app(pool)` used by tests
 │   ├── config.rs           # AppConfig parsed from environment
 │   ├── state.rs            # AppState shared with every handler (pool + config)
@@ -179,7 +183,7 @@ rust-app/
 │   │   └── health.rs       # /healthz
 │   │
 │   └── bin/
-│       └── seed.rs         # `cargo run --bin seed` — creates DB + demo data
+│       └── seed.rs         # entry point (bin: seed) — creates DB + demo data, see `./do.sh seed`
 │
 └── tests/
     ├── common/mod.rs       # spawns the real app on a random port

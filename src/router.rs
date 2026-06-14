@@ -1,24 +1,36 @@
 use crate::auth::middleware::require_user;
 use crate::handlers::*;
 use crate::state::AppState;
-use axum::extract::Request;
+use axum::extract::{ConnectInfo, Request};
 use axum::middleware::Next;
 use axum::response::Response;
 use axum::routing::{delete, get, patch, post};
 use axum::{middleware, Router};
+use std::net::SocketAddr;
 use std::time::Instant;
 use tower_cookies::CookieManagerLayer;
 use tower_http::compression::CompressionLayer;
 use tower_http::services::ServeDir;
 
-async fn access_log(req: Request, next: Next) -> Response {
+async fn access_log(ConnectInfo(addr): ConnectInfo<SocketAddr>, req: Request, next: Next) -> Response {
     let method = req.method().clone();
     let uri = req.uri().clone();
+    let ip = req
+        .headers()
+        .get("x-forwarded-for")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.split(',').next())
+        .map(|v| v.trim().to_string())
+        .unwrap_or_else(|| addr.ip().to_string());
     let start = Instant::now();
     let res = next.run(req).await;
     let ms = start.elapsed().as_millis();
-    let ts = chrono::Local::now().format("%Y-%m-%d %H:%M:%S");
-    println!("{ts}  -- {method} {uri} {} -- response-time: {ms} ms", res.status());
+    let status = res.status();
+    tracing::info!(
+        "{ip} -- {method} {uri} {} {} -- response-time: {ms}ms",
+        status.as_u16(),
+        status.canonical_reason().unwrap_or(""),
+    );
     res
 }
 

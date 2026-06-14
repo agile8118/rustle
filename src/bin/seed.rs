@@ -3,7 +3,7 @@
 // doesn't yet exist.
 //
 // Usage:
-//     cargo run --bin seed                           # uses DATABASE_URL from .env
+//     ./env.sh cargo run --bin seed                  # loads DATABASE_URL via env.sh
 //     DATABASE_URL=postgres://...  cargo run --bin seed
 //
 // Demo accounts (password = `password123` for both):
@@ -17,16 +17,17 @@ use sqlx::{Postgres, Row};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let _ = dotenvy::dotenv();
+    proctitle::set_title("rustle-seed");
+
     let url = std::env::var("DATABASE_URL")
-        .map_err(|_| anyhow::anyhow!("DATABASE_URL must be set (in .env or env)"))?;
+        .map_err(|_| anyhow::anyhow!("DATABASE_URL must be set"))?;
 
     if !Postgres::database_exists(&url).await.unwrap_or(false) {
-        println!("• Database not found — creating…");
+        println!("Database not found, creating...");
         Postgres::create_database(&url).await?;
-        println!("  ✓ created");
+        println!("Database created");
     } else {
-        println!("• Database already exists");
+        println!("Database already exists");
     }
 
     let pool = PgPoolOptions::new()
@@ -34,16 +35,16 @@ async fn main() -> anyhow::Result<()> {
         .connect(&url)
         .await?;
 
-    println!("• Running migrations…");
+    println!("Running migrations...");
     sqlx::migrate!("./migrations").run(&pool).await?;
-    println!("  ✓ migrations applied");
+    println!("Migrations applied");
 
-    println!("• Wiping existing data (cards/columns/boards/users)…");
+    println!("Wiping existing data (cards, columns, boards, users)...");
     sqlx::query("TRUNCATE users RESTART IDENTITY CASCADE")
         .execute(&pool)
         .await?;
 
-    println!("• Seeding users + board…");
+    println!("Seeding users and board...");
 
     let ada_hash = password::hash("password123").map_err(to_any)?;
     let turing_hash = password::hash("password123").map_err(to_any)?;
@@ -131,11 +132,11 @@ async fn main() -> anyhow::Result<()> {
         .await?;
 
     println!();
-    println!("✅ Seed complete.");
+    println!("Seed complete.");
     println!();
-    println!("   Sign in at http://127.0.0.1:7070/login with:");
-    println!("     ada@rustle.dev      / password123");
-    println!("     turing@rustle.dev   / password123");
+    println!("You can sign in with:");
+    println!("  ada@rustle.dev    / password123");
+    println!("  turing@rustle.dev / password123");
     Ok(())
 }
 

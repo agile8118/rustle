@@ -1,14 +1,15 @@
-use rustle::{app_with_config, config::AppConfig};
+use rustle::{app_with_config, config::AppConfig, logging};
 use sqlx::postgres::PgPoolOptions;
+use std::net::SocketAddr;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let _ = dotenvy::dotenv();
+    proctitle::set_title("rustle-server");
 
     tracing_subscriber::registry()
         .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("rustle=info,tower_http=info,axum=info")))
-        .with(tracing_subscriber::fmt::layer())
+        .with(logging::file_log_layer())
         .init();
 
     let config = AppConfig::from_env()?;
@@ -20,15 +21,18 @@ async fn main() -> anyhow::Result<()> {
         .max_connections(10)
         .connect(&config.database_url)
         .await?;
+    println!("[postgres] connected successfully");
 
     sqlx::migrate!("./migrations").run(&pool).await?;
 
+    let port = config.port;
     let addr = format!("{}:{}", config.host, config.port);
     let app = app_with_config(pool, config);
 
     let listener = tokio::net::TcpListener::bind(&addr).await?;
+    println!("Server is on port {port}");
     tracing::info!("listening on http://{}", addr);
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await?;
     Ok(())
 }
 

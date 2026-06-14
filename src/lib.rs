@@ -2,6 +2,7 @@ pub mod auth;
 pub mod config;
 pub mod error;
 pub mod handlers;
+pub mod logging;
 pub mod models;
 pub mod router;
 pub mod state;

@@ -2,7 +2,8 @@ module.exports = {
   apps: [
     {
       name: "rustle",
-      script: "target/release/rustle",
+      script: "./env.sh",
+      args: "./server",
       interpreter: "none",
       autorestart: true,
       watch: false,

@@ -1,6 +1,7 @@
 /target
 /.env.local
 *.log
+/logs/
 .DS_Store
 .env
 .env.test

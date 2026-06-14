@@ -60,7 +60,13 @@ pub async fn register(
         req.display_name
     )
     .fetch_one(&state.pool)
-    .await?;
+    .await
+    .map_err(|e| match &e {
+        sqlx::Error::Database(db_err) if db_err.code().as_deref() == Some("23505") => {
+            AppError::Conflict("email already registered".into())
+        }
+        _ => AppError::from(e),
+    })?;
 
     let token = session::create(&state.pool, user.id).await?;
     cookies.add(session::cookie_for(token, state.config.cookie_secure));
