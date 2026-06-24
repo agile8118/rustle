@@ -35,7 +35,7 @@ pub async fn create(pool: &PgPool, user_id: Uuid) -> AppResult<String> {
 pub async fn user_for_token(pool: &PgPool, token: &str) -> AppResult<Option<User>> {
     let row = sqlx::query_as!(
         User,
-        r#"SELECT u.id, u.email::text as "email!", u.password_hash, u.display_name, u.created_at
+        r#"SELECT u.id, u.email as "email!", u.password_hash, u.display_name, u.created_at
            FROM users u
            JOIN sessions s ON s.user_id = u.id
            WHERE s.token = $1 AND s.expires_at > now()"#,

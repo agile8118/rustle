@@ -41,8 +41,10 @@ pub async fn register(
 ) -> AppResult<Json<PublicUser>> {
     req.validate().map_err(|e| AppError::Validation(e.to_string()))?;
 
+    let email = req.email.to_lowercase();
+
     let exists: Option<(uuid::Uuid,)> = sqlx::query_as("SELECT id FROM users WHERE email = $1")
-        .bind(&req.email)
+        .bind(&email)
         .fetch_optional(&state.pool)
         .await?;
     if exists.is_some() {
@@ -54,8 +56,8 @@ pub async fn register(
         User,
         r#"INSERT INTO users (email, password_hash, display_name)
            VALUES ($1, $2, $3)
-           RETURNING id, email::text as "email!", password_hash, display_name, created_at"#,
-        req.email,
+           RETURNING id, email as "email!", password_hash, display_name, created_at"#,
+        email,
         hash,
         req.display_name
     )
@@ -80,11 +82,13 @@ pub async fn login(
 ) -> AppResult<Json<PublicUser>> {
     req.validate().map_err(|e| AppError::Validation(e.to_string()))?;
 
+    let email = req.email.to_lowercase();
+
     let user: Option<User> = sqlx::query_as!(
         User,
-        r#"SELECT id, email::text as "email!", password_hash, display_name, created_at
+        r#"SELECT id, email as "email!", password_hash, display_name, created_at
            FROM users WHERE email = $1"#,
-        req.email
+        email
     )
     .fetch_optional(&state.pool)
     .await?;

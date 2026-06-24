@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, email::text as \"email!\", password_hash, display_name, created_at\n           FROM users WHERE email = $1",
+  "query": "SELECT u.id, u.email as \"email!\", u.password_hash, u.display_name, u.created_at\n           FROM users u\n           JOIN sessions s ON s.user_id = u.id\n           WHERE s.token = $1 AND s.expires_at > now()",
   "describe": {
     "columns": [
       {
@@ -11,7 +11,12 @@
       {
         "ordinal": 1,
         "name": "email!",
-        "type_info": "Text"
+        "type_info": {
+          "Custom": {
+            "name": "citext",
+            "kind": "Simple"
+          }
+        }
       },
       {
         "ordinal": 2,
@@ -31,21 +36,16 @@
     ],
     "parameters": {
       "Left": [
-        {
-          "Custom": {
-            "name": "citext",
-            "kind": "Simple"
-          }
-        }
+        "Text"
       ]
     },
     "nullable": [
       false,
-      null,
+      false,
       false,
       false,
       false
     ]
   },
-  "hash": "9f5eff4356e99658c07f8c243fdddb273a3d52b1b9f984c7506c880ad7dbfe08"
+  "hash": "e2e75572c204a93ca2297c85a9513568d86018dbfdfa749bad8fc46fbd44a63f"
 }
